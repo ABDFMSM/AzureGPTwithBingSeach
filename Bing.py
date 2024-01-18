@@ -19,9 +19,6 @@ subscription_key = os.getenv("Bing_key")
 print(subscription_key)
 endpoint = "https://api.bing.microsoft.com" + "/v7.0/search"
 
-# Query term(s) to search for. 
-query = "What is the latest GPT released by Microsoft?"
-
 # Construct a request
 def search(query):
     mkt = 'en-US'
@@ -37,27 +34,28 @@ def search(query):
     except Exception as ex:
         raise ex
     
-question = input("What is your question?")
+def WebContent():
+    question = input("What is your question?")
 
-results = search(question)
+    results = search(question)
 
-result = requests.get(results['url'])
-soup = BeautifulSoup(result.content, 'html.parser')
-text = soup.find('body').get_text().strip()
-cleaned_text = ' '.join(text.split('\n'))
-cleaned_text = ' '.join(text.split())
-#print(cleaned_text)
+    result = requests.get(results['url'])
+    soup = BeautifulSoup(result.content, 'html.parser')
+    text = soup.find('body').get_text().strip()
+    cleaned_text = ' '.join(text.split('\n'))
+    cleaned_text = ' '.join(text.split())
+    return cleaned_text, question
 
-#print(results_list)
 
-prompt = f"Use the following information: {cleaned_text} to get the answer to the following question {question}."
-content = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question"
+def GPTResponse(Text, question):
 
-if results: 
+    prompt = f"Use the following information: {Text} to get the answer to the following question {question}."
+    content = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question"
     response = openai.ChatCompletion.create(engine= engine_name, messages=[
         {'role': 'system', 'content': content},
         {'role': 'user', 'content': prompt}])
     text = response['choices'][0]['message']['content']
     print(f'Answer: {text}')
-else:
-    print("Error: No resutls found for the given question.")
+
+WebText, question = WebContent()
+GPTResponse(WebText, question)
