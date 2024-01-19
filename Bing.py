@@ -1,5 +1,4 @@
 import openai
-from pprint import pprint
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -10,14 +9,13 @@ load_dotenv()
 # Configure Azure OpenAI Completion Resource: 
 openai.api_type = "azure"
 openai.api_version = '2023-05-15'
-openai.api_base = os.getenv("OpenAISweden_endpoint")
-openai.api_key = os.getenv("OpenAISweden_key")
-engine_name = os.getenv("OpenAISweden_engine")
+openai.api_base = os.getenv("OpenAI_endpoint")
+openai.api_key = os.getenv("OpenAI_key")
+engine_name = os.getenv("OpenAI_engine")
 
 # Add your Bing Search V7 subscription key and endpoint to your environment variables.
 subscription_key = os.getenv("Bing_key")
-print(subscription_key)
-endpoint = "https://api.bing.microsoft.com" + "/v7.0/search"
+endpoint = "https://api.bing.microsoft.com/v7.0/search"
 
 # Construct a request
 def search(query):
@@ -50,9 +48,9 @@ def WebContent():
 def GPTResponse(Text, question):
 
     prompt = f"Use the following information: {Text} to get the answer to the following question {question}."
-    content = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question"
+    sys_msg = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question"
     response = openai.ChatCompletion.create(engine= engine_name, messages=[
-        {'role': 'system', 'content': content},
+        {'role': 'system', 'content': sys_msg},
         {'role': 'user', 'content': prompt}])
     text = response['choices'][0]['message']['content']
     print(f'Answer: {text}')
