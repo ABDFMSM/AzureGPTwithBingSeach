@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 ```
 I have created .env file that will contain the keys and endpoints for the Bing and Azure OpenAI resource.  
 We will need to get the Bing Web Search key and store the value in the .env file as shown: 
-![Bing Key](images/BingKey.png) 
+![Bing Key](Images/BingKey.png) 
 
 To configure the Bing resource, we would use load_dotenv and os to load the key from .env file as follows: 
 ``` Python
