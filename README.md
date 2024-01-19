@@ -2,9 +2,14 @@
 In this repo I will be using Azure OpenAI and Bing Search to somehow let Azure GPT get their information from the internet. 
 
 * [Bing Web Search API](https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/overview) used to return webpages related to the query. 
-* [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) used with the page content to provide an answer to the questio. 
+* [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) used with the page content to provide an answer to the question. 
 
 # Table of contents:
+[Step 1 - Getting Things Ready](https://github.com/ABDFMSM/AzureGPTwithBingSeach?tab=readme-ov-file#step-1---getting-things-ready)
+[Step 2 - Getting a URL from the Bing Web Search API](https://github.com/ABDFMSM/AzureGPTwithBingSeach?tab=readme-ov-file#step-2---getting-a-url-from-the-bing-web-search-api)
+[Step 3 - Getting the Contents of the Webpage](https://github.com/ABDFMSM/AzureGPTwithBingSeach?tab=readme-ov-file#step-3---getting-the-contents-of-the-webpage)
+[Step 4 - Using Azure Open AI model to answer the question](https://github.com/ABDFMSM/AzureGPTwithBingSeach?tab=readme-ov-file#step-4---using-azure-open-ai-model-to-answer-the-question)
+[Output Example](https://github.com/ABDFMSM/AzureGPTwithBingSeach?tab=readme-ov-file#output-example)
 
 # Step 1 - Getting Things Ready
 Before starting anything we would need to install the required python packages.  
@@ -21,6 +26,8 @@ import os
 from dotenv import load_dotenv
 ```
 I have created .env file that will contain the keys and endpoints for the Bing and Azure OpenAI resource.  
+On VScode you can create an empty file and you name it .env which should contain the following: 
+  ![EnvFile](Images/EnvFile.png)
 
 ## Configuring Bing Web Seach Resrouce
 We will need to get the Bing Web Search key and store the value in the .env file as shown: 
@@ -67,7 +74,7 @@ def search(query):
         raise ex
 ```
 
-# Step 3 - Getting the contents of the webpage
+# Step 3 - Getting the Contents of the Webpage
 After getting the URL, I would use the requests library to get the contents of the page to feed it later to the AOAI resource. 
 The following function will prompt the user to ask a question and then returns the extracted webpage text and the user's question. 
 ``` Python
