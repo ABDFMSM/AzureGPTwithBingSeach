@@ -1,4 +1,7 @@
 # AzureGPTwithBingSeach
+
+**This readme need to be updated to reflect the updates done in the Bing.py file** 
+
 In this repo I will be using Azure OpenAI and Bing Search to somehow let Azure GPT get their information from the internet. 
 
 * [Bing Web Search API](https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/overview) used to return webpages related to the query. 
