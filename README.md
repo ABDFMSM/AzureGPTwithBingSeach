@@ -1,6 +1,6 @@
 # AzureGPTwithBingSeach
 
-**This readme need to be updated to reflect the updates done in the Bing.py file** 
+**This updated repo now uses an AOAI completion model as well to extract keywords from the query for the bing search and to summarize the webpage content.** 
 
 In this repo I will be using Azure OpenAI and Bing Search to somehow let Azure GPT get their information from the internet. 
 
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ```
 We would need to import the following libraries: 
 ``` Python
-import openai
+from openai import AzureOpenAI
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -51,12 +51,15 @@ We would get the Azure OpenAI resource key and endpoint from Azure portal as sho
 
 Now we would configure AOAI resource as follows: 
 ``` Python
-# Configure Azure OpenAI Completion Resource: 
-openai.api_type = "azure"
-openai.api_version = '2023-05-15'
-openai.api_base = os.getenv("OpenAISweden_endpoint")
-openai.api_key = os.getenv("OpenAISweden_key")
-engine_name = os.getenv("OpenAISweden_engine")
+# Configure Azure OpenAI Resource: 
+#openai.api_type = "azure"
+client = AzureOpenAI(
+    api_version = "2023-12-01-preview",
+    azure_endpoint = os.getenv("AOAI_endpoint"),
+    api_key = os.getenv("AOAI_key")
+)
+completion_deployment_name = os.getenv("AOAI_completion_engine")
+chat_deployment_name = os.getenv("AOAI_chat_engine")
 ```
 
 # Step 2 - Getting a URL from the Bing Web Search API
@@ -78,44 +81,58 @@ def search(query):
 ```
 
 # Step 3 - Getting the Contents of the Webpage
-After getting the URL, I would use the requests library to get the contents of the page to feed it later to the AOAI resource. 
-The following function will prompt the user to ask a question and then returns the extracted webpage text and the user's question. 
+After getting the user question, the AOAI completion model would extract the keywords and feed it to the Bing resource. The first URL content is extracted throught requests library and then fed again to completion model to summarize it.
 ``` Python
-def WebContent():
-    question = input("What is your question?")
-
-    results = search(question)
+def WebContent(question):
+    query = f"Extract the keywords from the text between triple backticks ```{question}``` in order to formulate a bing search query"
+    #print(query)
+    bing_query = client.completions.create(model=completion_deployment_name, prompt=query)
+    #print(bing_query.choices[0].text)
+    results = search(bing_query.choices[0].text)
     result = requests.get(results['url'])
-    # I have used beautifulsoup to get a better structured output and did some post-processing to the webpage to remove extra spaces.
     soup = BeautifulSoup(result.content, 'html.parser')
     text = soup.find('body').get_text().strip()
     cleaned_text = ' '.join(text.split('\n'))
     cleaned_text = ' '.join(text.split())
-    # Return a tuple of the extracted webpage text and the question that was asked by the user. 
-    return cleaned_text, question
+    text_to_summarize = f"Provide one paragraph that answer the question between double back ticks ``{question}`` using information between triple backticks ```{cleaned_text}```"
+    returned_text = client.completions.create(model=completion_deployment_name, prompt=text_to_summarize, max_tokens=1024)
+    print(f"Based on the following URL: {results['url']}")
+    return returned_text.choices[0].text, question
 ```
 
 # Step 4 - Using Azure Open AI model to answer the question
-Feeding the webpage contents and the question to the AOAI resource.  
+Feeding the summarized paragraph and the question to the AOAI chat completion model. In this updated model I have added the ability to provide previous messages and include certain number of past messages for context. 
 Since AOAI model is not connected to the internet, the AOAI will use the webpage contents as a way to get real-time information to answer the user's question. 
 ``` Python
-def GPTResponse(Text, question):
-    #Modify prompt and sys_msg as needed
-    prompt = f"Use the following information: {Text} to get the answer to the following question {question}."
-    sys_msg = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question."
+def GPTResponse(Text, question, msg_include=2, messages=[], num=0):
+    num += 2
+    prompt = f"To answer the following question between double back ticks ``{question}``, use the following information between the triple backticks ```{Text}``` ."
+    if messages == []:
+        sys_msg = "You are an AI assistant that will get information from the first URL in the Bing search so you are somehow getting information from the internet, and you have to use that information to provide an answer to the question"
+        messages = [{"role": "system", "content": sys_msg}, {"role": "user", "content": prompt}]
+    else:
+        messages.append({"role": "user", "content": prompt})
+    if num > msg_include: 
+        del messages[1:3]
+        num -= 2
+    response = client.chat.completions.create(model= chat_deployment_name, messages=messages)
+    text = response.choices[0].message.content
+    print(f'{text}')    
+    question = input("Do you still have other questions? Otherwise type 'exit' to exit:\n")
+    if question != "exit":
+        messages.append({"role": "assistant", "content": text})
+        WebText, question = WebContent(question)
+        GPTResponse(WebText, question, msg_include, messages, num)
+    return         
 
-    response = openai.ChatCompletion.create(engine= engine_name, messages=[
-        {'role': 'system', 'content': sys_msg},
-        {'role': 'user', 'content': prompt}])
-    text = response['choices'][0]['message']['content']
-    print(f'Answer: {text}')
 ```
 
 # Output Example
 Finally we can run the following code to start the search: 
 ``` Python
-WebText, question = WebContent()
-GPTResponse(WebText, question)
+question = input("What is your question?\n")
+WebText, question = WebContent(question)
+GPTResponse(WebText, question, 6)
 ```
 Here is the question and the response you can get: 
   ![Example](Images/Example.png)
