@@ -128,7 +128,7 @@ def GPTResponse(Text, question, msg_include=2, messages=[], num=0):
 ```
 
 # Output Example
-Finally we can run the following code to start the search: 
+Finally we can run the following code to start the conversation with the chatCompletion model, it will always provide the URL that it used to answer user's questions: 
 ``` Python
 question = input("What is your question?\n")
 WebText, question = WebContent(question)
