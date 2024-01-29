@@ -1,4 +1,4 @@
-openai==0.28.1
+openai
 requests 
 beautifulsoup4
 python-dotenv 
